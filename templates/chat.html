@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Medical Bot</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css?family=Raleway|Ubuntu&display=swap");
+
+    body {
+      background: #E8EBF5;
+      padding: 0;
+      margin: 0;
+      font-family: Raleway;
+    }
+
+    .chat-box {
+      height: 90%;
+      width: 400px;
+      position: absolute;
+      margin: 0 auto;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      z-index: 15;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.005);
+      right: 0;
+      bottom: 0;
+      margin: 15px;
+      background: #fff;
+      border-radius: 15px;
+      visibility: hidden;
+      opacity: 0;
+      transition: visibility 0s, opacity 0.5s ease;
+    }
+
+    .chat-box.visible {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .chat-box-header {
+      height: 8%;
+      border-top-left-radius: 15px;
+      border-top-right-radius: 15px;
+      display: flex;
+      font-size: 14px;
+      padding: 0.5em 0;
+      box-shadow: 0 1px 10px rgba(0, 0, 0, 0.025);
+    }
+
+    .chat-box-header h3 {
+      font-family: Ubuntu;
+      font-weight: 400;
+      float: left;
+      position: absolute;
+      left: 25px;
+    }
+
+    .chat-box-header p {
+      float: right;
+      position: absolute;
+      right: 16px;
+      cursor: pointer;
+      height: 50px;
+      width: 50px;
+      text-align: center;
+      line-height: 3.25;
+      margin: 0;
+    }
+
+    .chat-box-body {
+      height: 75%;
+      background: #f8f8f8;
+      overflow-y: scroll;
+      padding: 12px;
+    }
+
+    .chat-box-body-send,
+    .chat-box-body-receive {
+      width: 250px;
+      background: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.015);
+      margin-bottom: 14px;
+    }
+
+    .chat-box-body-send {
+      float: right;
+    }
+
+    .chat-box-body-receive {
+      float: left;
+    }
+
+    .chat-box-body-send p,
+    .chat-box-body-receive p {
+      margin: 0;
+      color: #444;
+      font-size: 14px;
+      margin-bottom: 0.25rem;
+    }
+
+    .chat-box-body-send span,
+    .chat-box-body-receive span {
+      float: right;
+      color: #777;
+      font-size: 10px;
+    }
+
+    .chat-box-footer {
+      position: relative;
+      display: flex;
+    }
+
+    .chat-box-footer button {
+      border: none;
+      padding: 16px;
+      font-size: 14px;
+      background: white;
+      cursor: pointer;
+    }
+
+    .chat-box-footer input {
+      padding: 10px;
+      border: none;
+      border-radius: 50px;
+      background: whitesmoke;
+      margin: 10px;
+      font-family: Ubuntu;
+      font-weight: 600;
+      color: #444;
+      width: 280px;
+    }
+
+    .chat-button {
+      padding: 15px 25px;
+      background: #2C50EF;
+      color: white;
+      font-family: Ubuntu;
+      font-size: 16px;
+      border: none;
+      border-radius: 30px;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Chat Button -->
+  <button class="chat-button" onclick="toggleChat()">Message Us</button>
+
+  <!-- Chat Box -->
+  <div class="chat-box" id="chatBox">
+    <div class="chat-box-header">
+      <h3>Medical Bot</h3>
+      <p onclick="toggleChat()">✕</p>
+    </div>
+    <div class="chat-box-body">
+      <div class="chat-box-body-receive">
+        <p>Hello! How can I help you today?</p>
+        <span>10:30 AM</span>
+      </div>
+    </div>
+    <div class="chat-box-footer">
+      <input id="UserInput" type="text" placeholder="Type a message..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    function toggleChat() {
+      const chatBox = document.getElementById('chatBox');
+      chatBox.classList.toggle('visible');
+    }
+
+
+    function sendMessage() {
+      const inputField = document.getElementById('UserInput');
+      const message = inputField.value.trim();
+
+      if (!message) return;
+
+
+      // <div class="chat-box-body-receive">
+      //   <p>Hello! How can I help you today?</p>
+      //   <span>10:30 AM</span>
+      // </div>
+      // Show user message in chat
+      const chatBody = document.querySelector('.chat-box-body');
+      const userMsg = document.createElement('div');
+      userMsg.className = 'chat-box-body-send';
+      userMsg.innerHTML = `<p>${message}</p><span>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`;
+      chatBody.appendChild(userMsg);
+      chatBody.scrollTop = chatBody.scrollHeight;
+
+      // Send POST request to Flask
+      fetch('/ask', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `question=${encodeURIComponent(message)}`
+      })
+        .then(response => response.text())
+        .then(data => {
+          const chatBody = document.querySelector('.chat-box-body');
+
+          // Create bot message container
+          const botMsg = document.createElement('div');
+          botMsg.className = 'chat-box-body-receive';
+
+          // Create paragraph for typing text
+          const para = document.createElement('p');
+          botMsg.appendChild(para);
+
+          // Create time span
+          const time = document.createElement('span');
+          time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          botMsg.appendChild(time);
+
+          // Append to chat
+          chatBody.appendChild(botMsg);
+          chatBody.scrollTop = chatBody.scrollHeight;
+
+          // Typing animation
+          let i = 0;
+          const typingSpeed = 30; // ms between characters
+
+          function typeChar() {
+            if (i < data.length) {
+              para.textContent += data.charAt(i);
+              chatBody.scrollTop = chatBody.scrollHeight; // Keep scroll to bottom
+              i++;
+              setTimeout(typeChar, typingSpeed);
+            }
+          }
+
+          typeChar(); // Start animation
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+
+    
+
+    inputField.value = '';
+    }
+
+  </script>
+
+</body>
+
+</html>
