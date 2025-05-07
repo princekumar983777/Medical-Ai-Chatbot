@@ -1,5 +1,7 @@
 langchain
 flask
+flask_cors
+gunicorn
 pypdf
 python-dotenv
 pinecone
@@ -7,4 +9,5 @@ langchain-pinecone
 langchain_community
 langchain_experimental
 langchain-google-genai
+sentence-transformers
 -e .
